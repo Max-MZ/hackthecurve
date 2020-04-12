@@ -5,12 +5,13 @@ const dotenv = require('dotenv');
 const path = require('path');
 const restify = require('restify');
 
+
 // Import required bot services.
 // See https://aka.ms/bot-services to learn more about the different parts of a bot.
 const { BotFrameworkAdapter } = require('botbuilder');
 
 // This bot's main dialog.
-const { EchoBot } = require('./bot');
+const { MyBot } = require('./bot');
 
 // Import required bot configuration.
 const ENV_FILE = path.join(__dirname, '.env');
@@ -33,6 +34,27 @@ const adapter = new BotFrameworkAdapter({
     openIdMetadata: process.env.BotOpenIdMetadata
 });
 
+// Map knowledge base endpoint values from .env file into the required format for `QnAMaker`.
+const configuration = {
+    knowledgeBaseId: process.env.QnAKnowledgebaseId,
+    endpointKey: process.env.QnAAuthKey,
+    host: process.env.QnAEndpointHostName
+ };
+
+
+// Create the main dialog.
+// const myBot = new EchoBot();
+const myBot = new MyBot(configuration, {});
+
+// Listen for incoming requests.
+server.post('/api/messages', (req, res) => {
+    adapter.processActivity(req, res, async (context) => {
+        // Route to main dialog.
+        await myBot.run(context);
+    });
+});
+
+
 // Catch-all for errors.
 adapter.onTurnError = async (context, error) => {
     // This check writes out errors to console log .vs. app insights.
@@ -52,14 +74,3 @@ adapter.onTurnError = async (context, error) => {
     await context.sendActivity('The bot encounted an error or bug.');
     await context.sendActivity('To continue to run this bot, please fix the bot source code.');
 };
-
-// Create the main dialog.
-const myBot = new EchoBot();
-
-// Listen for incoming requests.
-server.post('/api/messages', (req, res) => {
-    adapter.processActivity(req, res, async (context) => {
-        // Route to main dialog.
-        await myBot.run(context);
-    });
-});
