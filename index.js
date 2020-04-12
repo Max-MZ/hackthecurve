@@ -9,6 +9,7 @@ const restify = require('restify');
 // Import required bot services.
 // See https://aka.ms/bot-services to learn more about the different parts of a bot.
 const { BotFrameworkAdapter } = require('botbuilder');
+const { CosmosDbPartitionedStorage } = require("botbuilder-azure");
 
 // This bot's main dialog.
 const { MyBot } = require('./bot');
@@ -24,6 +25,14 @@ server.listen(process.env.port || process.env.PORT || 3978, () => {
     console.log('\nGet Bot Framework Emulator: https://aka.ms/botframework-emulator');
     console.log('\nTo talk to your bot, open the emulator select "Open Bot"');
 });
+
+// Create access to CosmosDb Storage - this replaces local Memory Storage.
+var storage = new CosmosDbPartitionedStorage({
+    cosmosDbEndpoint: process.env.DB_SERVICE_ENDPOINT,
+    authKey: process.env.AUTH_KEY,
+    databaseId: process.env.DATABASE_ID,
+    containerId: process.env.CONTAINER
+})
 
 // Create adapter.
 // See https://aka.ms/about-bot-adapter to learn more about how bots work.

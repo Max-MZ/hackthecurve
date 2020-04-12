@@ -1,8 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-const { ActivityHandler } = require('botbuilder');
+const { ActivityHandler, MemoryStorage } = require('botbuilder');
 const { QnAMaker } = require('botbuilder-ai');
+
+
+var storage = new MemoryStorage();
 
 class MyBot extends ActivityHandler {
     constructor(configuration, qnaOptions) {
@@ -12,13 +15,12 @@ class MyBot extends ActivityHandler {
         this.qnaMaker = new QnAMaker(configuration, qnaOptions);
 
         this.onMessage(async (context, next) => {
-            await context.sendActivity(`Looking for answers ' `);
             // send user input to QnA Maker.
             const qnaResults = await this.qnaMaker.getAnswers(context);
             
          // If an answer was received from QnA Maker, send the answer back to the user.
             if (qnaResults[0]) {
-                await context.sendActivity(`QnAMaker returned response: ' ${ qnaResults[0].answer}`);
+                await context.sendActivity(` ${ qnaResults[0].answer}`);
             }
             else {
                 // If no answers were returned from QnA Maker, reply with help.
