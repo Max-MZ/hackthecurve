@@ -29,6 +29,8 @@ class UserProfileDialog extends ComponentDialog {
     constructor(userState) {
         super('userProfileDialog');
 
+        this.active = false;
+
         this.userProfile = userState.createProperty(USER_PROFILE);
 
         this.addDialog(new TextPrompt(NAME_PROMPT));
@@ -72,7 +74,7 @@ class UserProfileDialog extends ComponentDialog {
         // Running a prompt here means the next WaterfallStep will be run when the user's response is received.
         return await step.prompt(CHOICE_PROMPT, {
             prompt: 'Would you like to sign up for email updates?',
-            choices: ChoiceFactory.toChoices(['Yes, Please!', 'No thank you / I already have'])
+            choices: ChoiceFactory.toChoices(['Yes', 'Bus'])
         });
     }
 

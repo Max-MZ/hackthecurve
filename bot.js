@@ -20,6 +20,8 @@ class MyBot extends ActivityHandler {
         this.dialog = dialog;
         this.dialogState = this.conversationState.createProperty('DialogState');
 
+        this.waterfall = false;
+
         this.onMessage(async (context, next) => {
             if (this.dialogState) {
                 console.log('yes');
@@ -28,7 +30,16 @@ class MyBot extends ActivityHandler {
             }
             // send user input to QnA Maker.
 
-            //*QNA, LEAVE OUT FOR NOW
+            
+
+        //  THE STUFF FOR THE WATERFALLA
+            console.log(this.dialogState);
+            console.log("hmm = " + this.dialog.active);
+            if (this.dialog.active == true){
+                await this.dialog.run(context, this.dialogState);
+            } else {
+                await context.sendActivity('prentend this is qna response');
+//*QNA, LEAVE OUT FOR NOW
         //     const qnaResults = await this.qnaMaker.getAnswers(context);
             
         //  // If an answer was received from QnA Maker, send the answer back to the user.
@@ -41,10 +52,8 @@ class MyBot extends ActivityHandler {
         //             + 'This example uses a QnA Maker Knowledge Base that focuses on smart light bulbs. '
         //             + `Ask the bot questions like "Why won't it turn on?" or "I need help."`);
         //     }
-
-        //  THE STUFF FOR THE WATERFALLA
-            console.log(this.dialogState);
-            await this.dialog.run(context, this.dialogState);
+            }
+            
             await next();
         });
 
