@@ -18,7 +18,7 @@ const { channels } = require('botbuilder-dialogs/lib/choices/channel');
 const { UserProfile } = require('../user');
 
 const ATTACHMENT_PROMPT = 'ATTACHMENT_PROMPT';
-const CHOICE_PROMPT = 'CHOICE_PROMPT';
+const CHOICE_PROMPT = 'CHOICE_PROMPgit T';
 const CONFIRM_PROMPT = 'CONFIRM_PROMPT';
 const NAME_PROMPT = 'NAME_PROMPT';
 const NUMBER_PROMPT = 'NUMBER_PROMPT';
@@ -29,7 +29,7 @@ class UserProfileDialog extends ComponentDialog {
     constructor(userState) {
         super('userProfileDialog');
 
-        this.active = false;
+        this.active = true;
 
         this.userProfile = userState.createProperty(USER_PROFILE);
 
@@ -45,8 +45,11 @@ class UserProfileDialog extends ComponentDialog {
             this.nameConfirmStep.bind(this),
             this.ageStep.bind(this),
             // this.pictureStep.bind(this),
-            this.confirmStep.bind(this),
-            this.summaryStep.bind(this)
+            // this.confirmStep.bind(this),
+            this.emailStep.bind(this),
+            this.summaryStep.bind(this),
+            this.lastStep.bind(this)
+
         ]));
 
         this.initialDialogId = WATERFALL_DIALOG;
@@ -72,22 +75,46 @@ class UserProfileDialog extends ComponentDialog {
     async transportStep(step) {
         // WaterfallStep always finishes with the end of the Waterfall or with another dialog; here it is a Prompt Dialog.
         // Running a prompt here means the next WaterfallStep will be run when the user's response is received.
-        return await step.prompt(CHOICE_PROMPT, {
-            prompt: 'Would you like to sign up for email updates?',
-            choices: ChoiceFactory.toChoices(['Yes', 'Bus'])
-        });
+        // return await step.prompt(CHOICE_PROMPT, {
+        //     prompt: 'Would you like to sign up for email updates?',
+        //     choices: ChoiceFactory.toChoices(['Yes', 'No'])
+        // });
+
+        return await step.prompt(CONFIRM_PROMPT, 'Wanna sign up?', ['yes', 'no']);
     }
 
     async nameStep(step) {
-        step.values.transport = step.result.value;
-        return await step.prompt(NAME_PROMPT, 'Please enter your name.');
+        if(!step.result){
+
+            this.active = false;
+            await step.context.sendActivity('You are welcome to sign up for notifcations any time!');
+            return await step.context.sendActivity('What can I help you with today?');
+            
+        } else{
+            return await step.prompt(NAME_PROMPT, 'Please enter your name.');
+        }
+        
+        
     }
 
     async nameConfirmStep(step) {
-        step.values.name = step.result;
+        var name = step.result;
+        var temp2 = name.split("");
+
+        var first = name[0];
+        first = first.toUpperCase();
+
+        temp2[0] =first;
+        
+        name = temp2.join("");
+
+        console.log(name);
+
+     
+        step.values.name = name;
 
         // We can send messages to the user at any point in the WaterfallStep.
-        await step.context.sendActivity(`Thanks ${ step.result }.`);
+        await step.context.sendActivity(`Thanks ${ name }.`);
 
         // WaterfallStep always finishes with the end of the Waterfall or with another dialog; here it is a Prompt Dialog.
         return await step.prompt(CONFIRM_PROMPT, 'Do you want to give your age?', ['yes', 'no']);
@@ -129,43 +156,65 @@ class UserProfileDialog extends ComponentDialog {
     //     }
     // }
 
-    async confirmStep(step) {
+    async emailStep(step) {
         // step.values.picture = step.result && step.result[0];
         step.values.age = step.result;
         // WaterfallStep always finishes with the end of the Waterfall or with another dialog; here it is a Prompt Dialog.
-        return await step.prompt(CONFIRM_PROMPT, { prompt: 'Is this okay?' });
+        return await step.prompt(NAME_PROMPT, { prompt: 'Please enter your email' });
     }
 
+
+    // async confirmStep(step) {
+    //     // step.values.picture = step.result && step.result[0];
+    //     step.values.age = step.result;
+    //     // WaterfallStep always finishes with the end of the Waterfall or with another dialog; here it is a Prompt Dialog.
+    //     return await step.prompt(CONFIRM_PROMPT, { prompt: 'Is this okay?' });
+    // }
+
     async summaryStep(step) {
+        step.values.email = step.result;
+
+        userProfile.name = step.values.name;
+        userProfile.age = step.values.age;
+        userProfile.email = step.values.email;
+        
+
+        let msg = `I have your email as ${ userProfile.email } and your name as ${ userProfile.name }`;
+        if (userProfile.age !== -1) {
+            msg += ` and your age as ${ userProfile.age }`;
+        }
+
+        msg += '.';
+        await step.context.sendActivity(msg);
+
+
+        return await step.prompt(CONFIRM_PROMPT, { prompt: 'Is this okay?' });
+
         if (step.result) {
             // Get the current profile object from user state.
-            const userProfile = await this.userProfile.get(step.context, new UserProfile());
-
-            userProfile.transport = step.values.transport;
-            userProfile.name = step.values.name;
-            userProfile.age = step.values.age;
-           
-
-            let msg = `I have your mode of transport as ${ userProfile.transport } and your name as ${ userProfile.name }`;
-            if (userProfile.age !== -1) {
-                msg += ` and your age as ${ userProfile.age }`;
-            }
-
-            msg += '.';
-            await step.context.sendActivity(msg);
-            if (userProfile.picture) {
-                try {
-                    await step.context.sendActivity(MessageFactory.attachment(userProfile.picture, 'This is your profile picture.'));
-                } catch {
-                    await step.context.sendActivity('A profile picture was saved but could not be displayed here.');
-                }
-            }
+   
+            
+            
         } else {
             await step.context.sendActivity('Thanks. Your profile will not be kept.');
         }
 
         // WaterfallStep always finishes with the end of the Waterfall or with another dialog; here it is the end.
         return await step.endDialog();
+    }
+
+    async lastStep(step) {
+        if(!step.result){
+
+            this.active = false;
+            // await step.context.sendActivity('You are welcome to sign up for notifcations any time!');
+            return await step.context.sendActivity('Thanks. Your profile will not be kept.');
+            
+        } else{
+            return await step.prompt(NAME_PROMPT, 'Excellent! We are adding you to the database.');
+        }
+        
+        
     }
 
     // async agePromptValidator(promptContext) {

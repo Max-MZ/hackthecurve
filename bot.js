@@ -23,18 +23,19 @@ class MyBot extends ActivityHandler {
         this.waterfall = false;
 
         this.onMessage(async (context, next) => {
-            if (this.dialogState) {
-                console.log('yes');
-            } else {
-                console.log('nah');
-            }
+            // if (this.dialogState) {
+            //     console.log('yes');
+            // } else {
+            //     console.log('nah');
+            // }
             // send user input to QnA Maker.
 
             
 
         //  THE STUFF FOR THE WATERFALLA
-            console.log(this.dialogState);
-            console.log("hmm = " + this.dialog.active);
+            // console.log(this.dialogState);
+            // console.log("hmm = " + this.dialog.active);
+            console.log(this.dialog.active);
             if (this.dialog.active == true){
                 await this.dialog.run(context, this.dialogState);
             } else {
