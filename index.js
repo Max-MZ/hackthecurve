@@ -3,7 +3,7 @@
 
 // const appInsights = require('applicationinsights');
 // appInsights.setup('88a1adda-4ec7-4443-b5ee-e3092308ad19').start();
-
+const cosmos = require("@azure/cosmos");
 const dotenv = require('dotenv');
 const path = require('path');
 const restify = require('restify');
@@ -20,8 +20,11 @@ const conversationState = new ConversationState(memoryStorage);
 const userState = new UserState(memoryStorage);
 const dialog = new UserProfileDialog(userState);
 
+
+
 // This bot's main dialog.
 const { MyBot } = require('./bot');
+const { RootDialog } = require('./dialogs/rootDialog');
 
 // User class
 const { user } = require('./user');
@@ -54,13 +57,23 @@ const adapter = new BotFrameworkAdapter({
     channelService: process.env.ChannelService,
     openIdMetadata: process.env.BotOpenIdMetadata
 });
-
+const { QnAMaker } = require('botbuilder-ai');
 // Map knowledge base endpoint values from .env file into the required format for `QnAMaker`.
-const configuration = {
+const configuration = new QnAMaker({
     knowledgeBaseId: process.env.QnAKnowledgebaseId,
     endpointKey: process.env.QnAAuthKey,
     host: process.env.QnAEndpointHostName
- };
+ });
+
+
+
+ 
+const qnamemoryStorage = new MemoryStorage();
+const qnaconversationState = new ConversationState(memoryStorage);
+const qnauserState = new UserState(memoryStorage);
+
+ const qnaDialog = new RootDialog(configuration);
+
 
 
  // This function stores new user messages. Creates new utterance log if none exists.
@@ -110,7 +123,7 @@ async function logMessageText(storage, turnContext) {
 
 // Create the main dialog.
 // const myBot = new EchoBot();
-const myBot = new MyBot(configuration, {}, conversationState, userState, dialog);
+const myBot = new MyBot(configuration, {}, conversationState, userState, dialog,qnaDialog, qnaconversationState, qnauserState);
 
 // Listen for incoming requests.
 server.post('/api/messages', (req, res) => {

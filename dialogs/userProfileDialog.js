@@ -174,6 +174,8 @@ class UserProfileDialog extends ComponentDialog {
     async summaryStep(step) {
         step.values.email = step.result;
 
+        const userProfile = await this.userProfile.get(step.context, new UserProfile());
+
         userProfile.name = step.values.name;
         userProfile.age = step.values.age;
         userProfile.email = step.values.email;
@@ -211,6 +213,7 @@ class UserProfileDialog extends ComponentDialog {
             return await step.context.sendActivity('Thanks. Your profile will not be kept.');
             
         } else{
+            this.active = false;
             return await step.prompt(NAME_PROMPT, 'Excellent! We are adding you to the database.');
         }
         

@@ -8,17 +8,32 @@ const { QnAMaker } = require('botbuilder-ai');
 var storage = new MemoryStorage();
 
 class MyBot extends ActivityHandler {
-    constructor(configuration, qnaOptions, conversationState, userState, dialog) {
+    constructor(configuration, qnaOptions, conversationState, userState, dialog, qnaDialog, qnaCoversationState, qnaUserState) {
        super();
        if (!configuration) throw new Error('[QnaMakerBot]: Missing parameter. configuration is required');
        // now create a qnaMaker connector. **leave out for now
-        // this.qnaMaker = new QnAMaker(configuration, qnaOptions);
+        this.qnaMaker = new QnAMaker(configuration, qnaOptions);
 
+        this.qnaMakerOptions = {
+            scoreThreshold: 0.3,
+            top: 3,
+            context: {},
+            qnaId: -1
+        };
         // The state management objects for the conversation and user.
         this.conversationState = conversationState;
         this.userState = userState;
         this.dialog = dialog;
         this.dialogState = this.conversationState.createProperty('DialogState');
+
+
+        // this.conversationState = conversationState;
+        // this.userState = userState;
+        this.qnaCoversationState = qnaCoversationState;
+        this.qnaUserState = qnaUserState;
+        this.qnaDialog = qnaDialog;
+        this.qnaDialogState = this.qnaCoversationState.createProperty('DialogState');
+        
 
         this.waterfall = false;
 
@@ -39,13 +54,15 @@ class MyBot extends ActivityHandler {
             if (this.dialog.active == true){
                 await this.dialog.run(context, this.dialogState);
             } else {
-                await context.sendActivity('prentend this is qna response');
+                // await context.sendActivity('prentend this is qna response');
+
+                await this.qnaDialog.run(context, this.qnaDialogState);
 //*QNA, LEAVE OUT FOR NOW
-        //     const qnaResults = await this.qnaMaker.getAnswers(context);
+        //     const qnaResults = await this.qnaMaker.getAnswersRaw(context,this.qnaMakerOptions);
             
         //  // If an answer was received from QnA Maker, send the answer back to the user.
-        //     if (qnaResults[0]) {
-        //         await context.sendActivity(` ${ qnaResults[0].answer}`);
+        //     if (qnaResults.answers.length > 0) {
+        //         await context.sendActivity(` ${ qnaResults.answers[0]}`);
         //     }
         //     else {
         //         // If no answers were returned from QnA Maker, reply with help.
